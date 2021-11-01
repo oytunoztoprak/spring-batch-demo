@@ -2,8 +2,10 @@ package com.primavera.springbatchdemo;
 
 import com.primavera.springbatchdemo.entity.Contact;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
+@Component
 public class ContactItemProcessor implements org.springframework.batch.item.ItemProcessor<Contact, Contact> {
 
     @Override
