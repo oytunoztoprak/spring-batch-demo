@@ -8,9 +8,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class JobCompletionNotificationListener extends JobExecutionListenerSupport {
 
-
-
-
     @Override
     public void afterJob(JobExecution jobExecution) {
         if (BatchStatus.COMPLETED.equals(jobExecution.getStatus())) {

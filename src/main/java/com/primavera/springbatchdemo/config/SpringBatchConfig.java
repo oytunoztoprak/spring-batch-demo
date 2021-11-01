@@ -1,10 +1,10 @@
 package com.primavera.springbatchdemo.config;
 
 import com.primavera.springbatchdemo.ContactItemProcessor;
+import com.primavera.springbatchdemo.ContactItemWriter;
 import com.primavera.springbatchdemo.JobCompletionNotificationListener;
 import com.primavera.springbatchdemo.entity.Contact;
 import com.primavera.springbatchdemo.repo.ContactRepository;
-import com.primavera.springbatchdemo.repo.ContactCARepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -13,8 +13,6 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.integration.async.AsyncItemProcessor;
 import org.springframework.batch.integration.async.AsyncItemWriter;
-import org.springframework.batch.item.data.RepositoryItemWriter;
-import org.springframework.batch.item.data.builder.RepositoryItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
@@ -43,7 +41,8 @@ public class SpringBatchConfig {
     public ContactRepository contactRepository;
 
     @Autowired
-    public ContactCARepository contactCARepository;
+    private ContactItemWriter contactItemWriter;
+
 
     @Value("${app.chunk-size}")
     private int chunkSize;
@@ -65,32 +64,22 @@ public class SpringBatchConfig {
     }
 
     @Bean
-    public RepositoryItemWriter itemWriter() {
-        return new RepositoryItemWriterBuilder<Contact>().repository(contactRepository).build();
-    }
-
-/*    @Bean
-    public RepositoryItemWriter itemWriter2() {
-        return new RepositoryItemWriterBuilder<Coffee2>().repository(coffeeRepository2).build();
-    }*/
-
-    @Bean
-    public Job importUserJob(JobCompletionNotificationListener listener, Step step1) {
-        return jobBuilderFactory.get("importUserJob")
+    public Job job(JobBuilderFactory jobBuilderFactory) {
+        return jobBuilderFactory
+                .get("Asynchronous Processing JOB")
                 .incrementer(new RunIdIncrementer())
-                .listener(listener)
-                .flow(step1)
+                .flow(asyncStep(null))
                 .end()
                 .build();
     }
 
     @Bean
-    public Step asyncManagerStep(StepBuilderFactory stepBuilderFactory) {
+    public Step asyncStep(StepBuilderFactory stepBuilderFactory) {
         return stepBuilderFactory
-                .get("Asynchronous Processing : Read -> Process -> Write ")
+                .get("Read-->Process-->Write")
                 .<Contact, Future<Contact>>chunk(chunkSize)
                 .reader(itemReader())
-                .processor(processor())
+                .processor(asyncProcessor())
                 .writer(asyncWriter())
                 .taskExecutor(taskExecutor())
                 .build();
@@ -103,13 +92,13 @@ public class SpringBatchConfig {
         executor.setMaxPoolSize(64);
         executor.setQueueCapacity(64);
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        executor.setThreadNamePrefix("MultiThreaded-");
+        executor.setThreadNamePrefix("Thread-");
         return executor;
     }
 
     @Bean
-    public AsyncItemProcessor<Contact, Contact> processor() {
-        org.springframework.batch.integration.async.AsyncItemProcessor<Contact, Contact> asyncItemProcessor = new AsyncItemProcessor<>();
+    public AsyncItemProcessor<Contact, Contact> asyncProcessor() {
+        AsyncItemProcessor<Contact, Contact> asyncItemProcessor = new AsyncItemProcessor<>();
         asyncItemProcessor.setDelegate(new ContactItemProcessor());
         asyncItemProcessor.setTaskExecutor(taskExecutor());
         return asyncItemProcessor;
@@ -118,7 +107,7 @@ public class SpringBatchConfig {
     @Bean
     public AsyncItemWriter<Contact> asyncWriter() {
         AsyncItemWriter<Contact> asyncItemWriter = new AsyncItemWriter<>();
-        asyncItemWriter.setDelegate(itemWriter());
+        asyncItemWriter.setDelegate(contactItemWriter);
         return asyncItemWriter;
     }
 
