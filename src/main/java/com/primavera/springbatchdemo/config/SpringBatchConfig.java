@@ -26,6 +26,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
@@ -47,12 +48,11 @@ public class SpringBatchConfig {
     @Value("${app.chunk-size}")
     private int chunkSize;
 
-
     @Value("${file.input}")
     private String fileInput;
 
     @Bean
-    public FlatFileItemReader itemReader() {
+    public FlatFileItemReader<Contact> itemReader() {
         return new FlatFileItemReaderBuilder().name("coffeeItemReader")
                 .resource(new ClassPathResource(fileInput))
                 .delimited()
@@ -63,15 +63,6 @@ public class SpringBatchConfig {
                 }})
                 .build();
     }
-
-/*    @Bean
-    public JdbcBatchItemWriter itemWriter(DataSource dataSource) {
-        return new JdbcBatchItemWriterBuilder()
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO coffee (brand, origin, characteristics) VALUES (:brand, :origin, :characteristics)")
-                .dataSource(dataSource)
-                .build();
-    }*/
 
     @Bean
     public RepositoryItemWriter itemWriter() {
@@ -94,12 +85,14 @@ public class SpringBatchConfig {
     }
 
     @Bean
-    public Step step1(RepositoryItemWriter<Contact> writer) {
-        return stepBuilderFactory.get("step1")
-                .<Contact, Contact> chunk(chunkSize)
+    public Step asyncManagerStep(StepBuilderFactory stepBuilderFactory) {
+        return stepBuilderFactory
+                .get("Asynchronous Processing : Read -> Process -> Write ")
+                .<Contact, Future<Contact>>chunk(chunkSize)
                 .reader(itemReader())
                 .processor(processor())
-                .writer(writer)
+                .writer(asyncWriter())
+                .taskExecutor(taskExecutor())
                 .build();
     }
 
@@ -114,25 +107,19 @@ public class SpringBatchConfig {
         return executor;
     }
 
-
     @Bean
-    public ContactItemProcessor processor() {
-        return new ContactItemProcessor();
-    }
-
-/*    @Bean
     public AsyncItemProcessor<Contact, Contact> processor() {
         org.springframework.batch.integration.async.AsyncItemProcessor<Contact, Contact> asyncItemProcessor = new AsyncItemProcessor<>();
         asyncItemProcessor.setDelegate(new ContactItemProcessor());
         asyncItemProcessor.setTaskExecutor(taskExecutor());
         return asyncItemProcessor;
-    }*/
+    }
 
-/*    @Bean
+    @Bean
     public AsyncItemWriter<Contact> asyncWriter() {
         AsyncItemWriter<Contact> asyncItemWriter = new AsyncItemWriter<>();
         asyncItemWriter.setDelegate(itemWriter());
         return asyncItemWriter;
-    }*/
+    }
 
 }
