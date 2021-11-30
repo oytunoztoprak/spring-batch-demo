@@ -17,12 +17,14 @@ public class ContactItemProcessor implements org.springframework.batch.item.Item
             contact.setStatus("OK");
         }
 
-        if ("AL".equals(contact.getState())) {
+        /*if ("AL".equals(contact.getState())) {
             contact.setWriteToKafka(true);
-        }
+        }*/
 
-        log.info("Sleeping 1 ms");
-        Thread.sleep(1);
+        contact.setWriteToKafka(true);
+
+        //log.info("Sleeping 1 ms");
+        //Thread.sleep(1);
         return contact;
     }
 
