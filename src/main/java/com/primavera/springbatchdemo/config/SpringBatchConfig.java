@@ -82,7 +82,6 @@ public class SpringBatchConfig {
                 .reader(itemReader())
                 .processor(asyncProcessor())
                 .writer(asyncWriter())
-                .taskExecutor(taskExecutor())
                 .build();
     }
 
@@ -90,9 +89,9 @@ public class SpringBatchConfig {
     @StepScope
     public TaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(64);
-        executor.setMaxPoolSize(64);
-        executor.setQueueCapacity(64);
+        executor.setCorePoolSize(128);
+        executor.setMaxPoolSize(128);
+        executor.setQueueCapacity(128);
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setThreadNamePrefix("Thread-");
         return executor;

@@ -22,6 +22,7 @@ public class ContactItemProcessor implements org.springframework.batch.item.Item
         }*/
 
         contact.setWriteToKafka(true);
+        //Thread.sleep(100L);
 
         //log.info("Sleeping 1 ms");
         //Thread.sleep(1);
