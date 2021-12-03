@@ -15,7 +15,6 @@ import java.io.Serializable;
 public class Contact implements Serializable {
 
     @Id
-    //@GeneratedValue (strategy = GenerationType.IDENTITY)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_generator")
     @SequenceGenerator(name="seq_generator", sequenceName = "dummy_seq",allocationSize = 10000)
     private Long id;
