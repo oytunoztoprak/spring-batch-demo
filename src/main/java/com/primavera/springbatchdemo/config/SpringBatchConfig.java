@@ -57,7 +57,7 @@ public class SpringBatchConfig {
                 .resource(new ClassPathResource(fileInput))
                 .delimited()
                 .delimiter(",")
-                .names(new String[]{"firstName", "lastName", "state"})
+                .names(new String[]{"id","firstName", "lastName", "state"})
                 .fieldSetMapper(new BeanWrapperFieldSetMapper() {{
                     setTargetType(Contact.class);
                 }})
