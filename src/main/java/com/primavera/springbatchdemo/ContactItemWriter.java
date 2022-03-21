@@ -28,9 +28,9 @@ public class ContactItemWriter implements ItemWriter<Contact> {
 
     public void write(List<? extends Contact> items) throws Exception {
         contactRepository.saveAll(items);
-        log.info("Kafka Write started");
-        items.stream()
-                .filter(Contact::getWriteToKafka)
-                .forEach(item-> kafkaTemplate.send(topicName, "key", item));
+//        log.info("Kafka Write started");
+//        items.stream()
+//                .filter(Contact::getWriteToKafka)
+//                .forEach(item-> kafkaTemplate.send(topicName, "key", item));
     }
 }

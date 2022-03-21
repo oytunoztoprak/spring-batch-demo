@@ -2,7 +2,6 @@ package com.primavera.springbatchdemo.config;
 
 import com.primavera.springbatchdemo.ContactItemProcessor;
 import com.primavera.springbatchdemo.ContactItemWriter;
-import com.primavera.springbatchdemo.JobCompletionNotificationListener;
 import com.primavera.springbatchdemo.entity.Contact;
 import com.primavera.springbatchdemo.repo.ContactRepository;
 import org.springframework.batch.core.Job;
@@ -28,9 +27,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
+
 @Configuration
 @EnableBatchProcessing
-public class SpringBatchConfig {
+public class Contact2JobConfig {
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -48,13 +48,13 @@ public class SpringBatchConfig {
     @Value("${app.chunk-size}")
     private int chunkSize;
 
-    @Value("${file.input}")
-    private String fileInput;
+    //@Value("${file.input}")
+    //private String fileInput;
 
     @Bean
-    public FlatFileItemReader<Contact> itemReader() {
+    public FlatFileItemReader<Contact> itemReader2() {
         return new FlatFileItemReaderBuilder().name("coffeeItemReader")
-                .resource(new ClassPathResource(fileInput))
+                .resource(new ClassPathResource("contact2.csv"))
                 .delimited()
                 .delimiter(",")
                 .names(new String[]{"id","firstName", "lastName", "state"})
@@ -65,29 +65,29 @@ public class SpringBatchConfig {
     }
 
     @Bean
-    public Job job(JobBuilderFactory jobBuilderFactory) {
+    public Job job2(JobBuilderFactory jobBuilderFactory) {
         return jobBuilderFactory
-                .get("Asynchronous Processing JOB")
+                .get("JOB2")
                 .incrementer(new RunIdIncrementer())
-                .flow(asyncStep(null))
+                .flow(asyncStep2(null))
                 .end()
                 .build();
     }
 
     @Bean
-    public Step asyncStep(StepBuilderFactory stepBuilderFactory) {
+    public Step asyncStep2(StepBuilderFactory stepBuilderFactory) {
         return stepBuilderFactory
                 .get("Read-->Process-->Write")
                 .<Contact, Future<Contact>>chunk(chunkSize)
-                .reader(itemReader())
-                .processor(asyncProcessor())
-                .writer(asyncWriter())
+                .reader(itemReader2())
+                .processor(asyncProcessor2())
+                .writer(asyncWriter2())
                 .build();
     }
 
     @Bean
     @StepScope
-    public TaskExecutor taskExecutor() {
+    public TaskExecutor taskExecutor2() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(128);
         executor.setMaxPoolSize(128);
@@ -98,15 +98,15 @@ public class SpringBatchConfig {
     }
 
     @Bean
-    public AsyncItemProcessor<Contact, Contact> asyncProcessor() {
+    public AsyncItemProcessor<Contact, Contact> asyncProcessor2() {
         AsyncItemProcessor<Contact, Contact> asyncItemProcessor = new AsyncItemProcessor<>();
         asyncItemProcessor.setDelegate(new ContactItemProcessor());
-        asyncItemProcessor.setTaskExecutor(taskExecutor());
+        asyncItemProcessor.setTaskExecutor(taskExecutor2());
         return asyncItemProcessor;
     }
 
     @Bean
-    public AsyncItemWriter<Contact> asyncWriter() {
+    public AsyncItemWriter<Contact> asyncWriter2() {
         AsyncItemWriter<Contact> asyncItemWriter = new AsyncItemWriter<>();
         asyncItemWriter.setDelegate(contactItemWriter);
         return asyncItemWriter;
