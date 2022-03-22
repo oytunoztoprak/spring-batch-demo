@@ -1,9 +1,13 @@
 package com.primavera.springbatchdemo.config;
 
-
-import com.primavera.springbatchdemo.entity.Contact;
+import com.primavera.springbatchdemo.entity.Account;
+import com.primavera.springbatchdemo.itemprocessor.AccountItemProcessor;
 import com.primavera.springbatchdemo.itemprocessor.ContactItemProcessor;
+import com.primavera.springbatchdemo.itemwriter.AccountItemWriter;
 import com.primavera.springbatchdemo.itemwriter.ContactItemWriter;
+import com.primavera.springbatchdemo.entity.Contact;
+import com.primavera.springbatchdemo.repo.AccountRepository;
+import com.primavera.springbatchdemo.repo.ContactRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -17,6 +21,7 @@ import org.springframework.batch.integration.async.AsyncItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,21 +36,21 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Configuration
 @EnableBatchProcessing
 @RequiredArgsConstructor
-public class ContactJobConfig {
+public class AccountJobConfig {
 
-    private final ContactItemWriter contactItemWriter;
-    private final ContactItemProcessor contactItemProcessor;
+    private final AccountItemWriter accountItemWriter;
+    private final AccountItemProcessor accountItemProcessor;
 
-    private final String jobName = "ContactFileImportJob";
-    private final String itemReaderName = "contactItemReader";
-    private final String filePath = "contact.csv";
-    private final String [] fileFields = {"id","firstName", "lastName", "state"};
+    private final String jobName = "AccountFileImportJob";
+    private final String itemReaderName = "accountItemReader";
+    private final String filePath = "account.csv";
+    private final String [] fileFields = {"id","name"};
 
     @Value("${app.chunk-size}")
     private int chunkSize;
 
     @Bean
-    public FlatFileItemReader<Contact> contactItemReader() {
+    public FlatFileItemReader<Account> accountItemReader() {
         return new FlatFileItemReaderBuilder().name(itemReaderName)
                 .resource(new ClassPathResource(filePath)) // Normally should point to a configurable directory with file pattern matching
                 .linesToSkip(1)
@@ -53,35 +58,35 @@ public class ContactJobConfig {
                 .delimiter(",")
                 .names(fileFields)
                 .fieldSetMapper(new BeanWrapperFieldSetMapper() {{
-                    setTargetType(Contact.class);
+                    setTargetType(Account.class);
                 }})
                 .build();
     }
 
     @Bean
-    public Job contactFileImportJob(JobBuilderFactory jobBuilderFactory) {
+    public Job accountFileImportJob(JobBuilderFactory jobBuilderFactory) {
         return jobBuilderFactory
                 .get(jobName)
                 .incrementer(new RunIdIncrementer())
-                .flow(asyncContactJobStep(null))
+                .flow(asyncAccountJobStep(null))
                 .end()
                 .build();
     }
 
     @Bean
-    public Step asyncContactJobStep(StepBuilderFactory stepBuilderFactory) {
+    public Step asyncAccountJobStep(StepBuilderFactory stepBuilderFactory) {
         return stepBuilderFactory
-                .get("ContactProcessStep")
-                .<Contact, Future<Contact>>chunk(chunkSize)
-                .reader(contactItemReader())
-                .processor(asyncContactProcessor())
-                .writer(asyncContactWriter())
+                .get("AccountProcessStep")
+                .<Account, Future<Account>>chunk(chunkSize)
+                .reader(accountItemReader())
+                .processor(asyncAccountProcessor())
+                .writer(asyncAccountWriter())
                 .build();
     }
 
     @Bean
     @StepScope
-    public TaskExecutor contactTaskExecutor() {
+    public TaskExecutor accountTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(128);
         executor.setMaxPoolSize(128);
@@ -92,17 +97,17 @@ public class ContactJobConfig {
     }
 
     @Bean
-    public AsyncItemProcessor<Contact, Contact> asyncContactProcessor() {
-        AsyncItemProcessor<Contact, Contact> asyncItemProcessor = new AsyncItemProcessor<>();
-        asyncItemProcessor.setDelegate(contactItemProcessor);
-        asyncItemProcessor.setTaskExecutor(contactTaskExecutor());
+    public AsyncItemProcessor<Account, Account> asyncAccountProcessor() {
+        AsyncItemProcessor<Account, Account> asyncItemProcessor = new AsyncItemProcessor<>();
+        asyncItemProcessor.setDelegate(accountItemProcessor);
+        asyncItemProcessor.setTaskExecutor(accountTaskExecutor());
         return asyncItemProcessor;
     }
 
     @Bean
-    public AsyncItemWriter<Contact> asyncContactWriter() {
-        AsyncItemWriter<Contact> asyncItemWriter = new AsyncItemWriter<>();
-        asyncItemWriter.setDelegate(contactItemWriter);
+    public AsyncItemWriter<Account> asyncAccountWriter() {
+        AsyncItemWriter<Account> asyncItemWriter = new AsyncItemWriter<>();
+        asyncItemWriter.setDelegate(accountItemWriter);
         return asyncItemWriter;
     }
 

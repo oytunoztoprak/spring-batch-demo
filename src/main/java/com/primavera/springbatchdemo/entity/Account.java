@@ -1,6 +1,5 @@
 package com.primavera.springbatchdemo.entity;
 
-import com.sun.xml.bind.v2.model.core.ID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +14,7 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @Entity
-public class Contact implements Serializable,Persistable {
+public class Account implements Serializable,Persistable {
 
 
     @Id
@@ -23,9 +22,8 @@ public class Contact implements Serializable,Persistable {
     //@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_generator")
     //@SequenceGenerator(name="seq_generator", sequenceName = "dummy_seq",allocationSize = 10000)
 
-    private String firstName;
-    private String lastName;
-    private String state;
+    private String name;
+    private String type;
     private String status;
 
 
@@ -42,5 +40,6 @@ public class Contact implements Serializable,Persistable {
     void markNotNew() {
         this.isNew = false;
     }
+
 
 }

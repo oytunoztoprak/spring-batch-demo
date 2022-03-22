@@ -1,13 +1,15 @@
-package com.primavera.springbatchdemo;
+package com.primavera.springbatchdemo.itemprocessor;
 
 import com.primavera.springbatchdemo.entity.Contact;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
+@Component
 @Slf4j
 public class ContactItemProcessor implements org.springframework.batch.item.ItemProcessor<Contact, Contact> {
 
     @Override
-    public Contact process(final Contact contact) throws Exception {
+    public Contact process(final Contact contact) {
 
 
 
@@ -17,15 +19,6 @@ public class ContactItemProcessor implements org.springframework.batch.item.Item
             contact.setStatus("OK");
         }
 
-        /*if ("AL".equals(contact.getState())) {
-            contact.setWriteToKafka(true);
-        }*/
-
-        contact.setWriteToKafka(true);
-        //Thread.sleep(100L);
-
-        //log.info("Sleeping 1 ms");
-        //Thread.sleep(1);
         return contact;
     }
 
