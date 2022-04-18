@@ -60,12 +60,7 @@ public class ContactFileWriteJobConfig {
 
         //Set output file location
         writer.setResource(outputResource);
-        writer.setHeaderCallback(new FlatFileHeaderCallback() {
-            @Override
-            public void writeHeader(Writer writer) throws IOException {
-                writer.write("id|firstName|lastName|state");
-            }
-        });
+        writer.setHeaderCallback(writer1 -> writer1.write("id|firstName|lastName|state"));
 
         //All job repetitions should "append" to same output file
         writer.setAppendAllowed(false);
